@@ -10,6 +10,7 @@ def logout():
     for key in list(st.session_state.keys()):
         del st.session_state[key]
     st.experimental_rerun()
+    return
 
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
