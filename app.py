@@ -1,8 +1,8 @@
 import streamlit as st
+st.set_page_config(page_title="Hurix Chat LLM App", layout="wide")
 from src import auth, chat, db, llm, ui, utils
 
 def main():
-    st.set_page_config(page_title="Hurix Chat LLM App", layout="wide")
     user = auth.login()
     if not user:
         st.stop()

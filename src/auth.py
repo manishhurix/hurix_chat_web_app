@@ -14,7 +14,10 @@ def logout():
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "https://hurixchatchat.streamlit.app/")
+# REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8501/")
 
+
+# st.write("REDIRECT URI:", REDIRECT_URI)
 
 def login():
     if "user" in st.session_state:
