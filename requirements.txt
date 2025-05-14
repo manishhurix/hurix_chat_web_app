@@ -1,0 +1,12 @@
+streamlit
+pymongo
+python-dotenv
+oauthlib
+requests
+google-auth
+google-auth-oauthlib
+openai
+anthropic
+PyPDF2
+python-docx
+streamlit-copy-to-clipboard 
