@@ -66,6 +66,7 @@ def login():
         st.write("CLIENT_ID:", CLIENT_ID)
         st.write("CLIENT_SECRET:", CLIENT_SECRET)
         st.write("REDIRECT URI:", REDIRECT_URI)
+        st.write("Google token endpoint response:", resp.text)
         st.error("Failed to authenticate with Google.")
         st.stop()
     tokens = resp.json()
