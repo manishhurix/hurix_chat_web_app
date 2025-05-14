@@ -37,16 +37,17 @@ def chat_with_model(model, messages, files=None):
             # Prepare Anthropic messages
             prompt = ""
             if context:
-                prompt += f"Document context: {context}\n"
+                prompt += "\n\nHuman: Document context: " + context
             for m in messages:
                 if m["role"] == "user":
-                    prompt += f"Human: {m['content']}\n"
+                    prompt += f"\n\nHuman: {m['content']}"
                 else:
-                    prompt += f"Assistant: {m['content']}\n"
+                    prompt += f"\n\nAssistant: {m['content']}"
+            prompt += "\n\nAssistant:"
             response = client.completions.create(
                 model=version,
                 max_tokens_to_sample=1024,
-                prompt=prompt + "Assistant:"
+                prompt=prompt
             )
             return response.completion.strip()
         else:
