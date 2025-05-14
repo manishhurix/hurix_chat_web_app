@@ -2,6 +2,9 @@ import os
 import openai
 import anthropic
 
+MAX_CONTEXT_CHARS = 12000  # ~3000-4000 tokens
+MAX_HISTORY = 10
+
 def get_available_models():
     # Return available LLMs and versions
     return [
@@ -17,6 +20,10 @@ def chat_with_model(model, messages, files=None):
     provider = model["provider"]
     version = model["version"]
     context = "\n".join(files) if files else ""
+    if context and len(context) > MAX_CONTEXT_CHARS:
+        context = context[:MAX_CONTEXT_CHARS]
+    if len(messages) > MAX_HISTORY:
+        messages = messages[-MAX_HISTORY:]
     try:
         if provider == "OpenAI":
             client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
