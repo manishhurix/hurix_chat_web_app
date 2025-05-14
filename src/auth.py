@@ -29,7 +29,9 @@ cookies = EncryptedCookieManager(
 if not cookies.ready():
     st.stop()
 
-# st.write("REDIRECT URI:", REDIRECT_URI)
+# st.write("CLIENT_ID:", CLIENT_ID)
+# st.write("REDIRECT_URI:", REDIRECT_URI)
+# st.write("CLIENT_SECRET:", CLIENT_SECRET)
 
 def login_success(user):
     cookies["user"] = json.dumps(user)

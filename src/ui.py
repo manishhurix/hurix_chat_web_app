@@ -103,7 +103,17 @@ def render_chat_window(user):
     if uploaded_file:
         with st.spinner("Processing file, please wait..."):
             file_text = utils.parse_uploaded_file(uploaded_file)
+            st.write("Parsed file text:", file_text)  # Debug
+            if not file_text:
+                st.error("Failed to parse file or file is empty. Please try another file.")
+                return
             chat.set_chat_file_context(chat_id, uploaded_file.name, file_text)
+            # Immediately check if it was saved
+            _, saved_context = chat.get_file_context_for_chat(chat_id)
+            st.write("Saved file context:", saved_context)  # Debug
+            if not saved_context:
+                st.error("Failed to save file context to database. Please try again.")
+                return
         st.success("File uploaded and parsed. It is now attached to this chat.")
         st.rerun()
         return
@@ -111,6 +121,7 @@ def render_chat_window(user):
     if file_name and not file_context:
         st.info("Processing file, please wait...")
         time.sleep(1)
+        # Optionally, add a max attempts or timeout here
         st.rerun()
         return
     if file_name and file_context:

@@ -1,3 +1,8 @@
+from dotenv import load_dotenv
+load_dotenv()
+import os
+
+
 import streamlit as st
 st.set_page_config(page_title="Hurix Chat LLM App", layout="wide")
 from src import auth, chat, db, llm, ui, utils
