@@ -4,7 +4,7 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import requests as req
-from urllib.parse import urlencode, urlparse, parse_qs
+from urllib.parse import urlencode
 
 def logout():
     for key in list(st.session_state.keys()):
@@ -52,9 +52,11 @@ def login():
         st.stop()
 
     # Step 2: Exchange code for token
-    # Use urllib to parse the full code value
-    query = urlparse(st.experimental_get_url()).query
-    code = parse_qs(query)["code"][0]
+    code_param = st.query_params.get("code")
+    if isinstance(code_param, list):
+        code = code_param[0]
+    else:
+        code = code_param
     st.write("Google auth token code:", code)
     token_url = "https://oauth2.googleapis.com/token"
     data = {
