@@ -37,11 +37,13 @@ def render_sidebar(user):
         new_chat_id = chat.start_new_chat(user_id)
         st.session_state["selected_chat"] = new_chat_id
         st.experimental_rerun()
+        return
     # Delete chat
     if st.sidebar.button("Delete Chat") and st.session_state.get("selected_chat"):
         chat.delete_chat(user_id, st.session_state["selected_chat"])
         st.session_state["selected_chat"] = chat_ids[0] if chat_ids else None
         st.experimental_rerun()
+        return
 
 def render_markdown_with_copy(md_text):
     # Find code blocks (```lang\n...\n```)
@@ -113,4 +115,5 @@ def render_chat_window(user):
                 st.error(llm_response)
             else:
                 chat.add_message(user_id, chat_id, llm_response, "assistant")
-        st.experimental_rerun() 
+        st.experimental_rerun()
+        return 
