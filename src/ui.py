@@ -97,24 +97,29 @@ def render_chat_window(user):
     # Message input
     prompt = st.chat_input("Type your message...")
     if prompt:
-        # Add user message
-        chat.add_message(user_id, chat_id, prompt, "user")
-        # Show spinner while waiting for LLM
-        with st.spinner("Waiting for assistant response..."):
-            from . import llm
-            selected_model_str = st.session_state.get("selected_model")
-            model_name, version = selected_model_str.split(" (")
-            version = version.rstrip(")")
-            if "ChatGPT" in model_name:
-                model = {"provider": "OpenAI", "name": "ChatGPT", "version": version}
-            else:
-                model = {"provider": "Anthropic", "name": "Claude", "version": version}
-            files = [file_text] if file_text else None
-            messages = chat.get_messages_for_chat(chat_id) + [{"role": "user", "content": prompt}]
-            llm_response = llm.chat_with_model(model, messages, files=files)
-            if llm_response.startswith("[LLM Error"):
-                st.error(llm_response)
-            else:
-                chat.add_message(user_id, chat_id, llm_response, "assistant")
+        try:
+            # Add user message
+            chat.add_message(user_id, chat_id, prompt, "user")
+            # Show spinner while waiting for LLM
+            with st.spinner("Waiting for assistant response..."):
+                from . import llm
+                selected_model_str = st.session_state.get("selected_model")
+                model_name, version = selected_model_str.split(" (")
+                version = version.rstrip(")")
+                if "ChatGPT" in model_name:
+                    model = {"provider": "OpenAI", "name": "ChatGPT", "version": version}
+                else:
+                    model = {"provider": "Anthropic", "name": "Claude", "version": version}
+                files = [file_text] if file_text else None
+                messages = chat.get_messages_for_chat(chat_id) + [{"role": "user", "content": prompt}]
+                llm_response = llm.chat_with_model(model, messages, files=files)
+                if llm_response.startswith("[LLM Error"):
+                    st.error(llm_response)
+                else:
+                    chat.add_message(user_id, chat_id, llm_response, "assistant")
+        except Exception as e:
+            st.error(f"An error occurred: {e}")
+            import traceback
+            st.text(traceback.format_exc())
         st.experimental_rerun()
         return 
