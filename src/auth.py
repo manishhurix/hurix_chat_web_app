@@ -53,6 +53,7 @@ def login():
 
     # Step 2: Exchange code for token
     code = st.query_params["code"][0]
+    st.write("Google token code:", code)
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
