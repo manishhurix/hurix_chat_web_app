@@ -5,7 +5,6 @@ from . import auth
 import os
 from datetime import datetime
 import re
-from streamlit_copy_to_clipboard import st_copy_to_clipboard
 
 def render_sidebar(user):
     logo_path = os.path.join("assets", "logo.png")
@@ -55,7 +54,6 @@ def render_markdown_with_copy(md_text):
         lang = match.group(1) or None
         code = match.group(2)
         st.code(code, language=lang)
-        st_copy_to_clipboard(code, f"Copy {lang or 'code'}")
         last_end = match.end()
     # Render any remaining markdown
     if last_end < len(md_text):
