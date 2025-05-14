@@ -9,4 +9,5 @@ openai
 anthropic
 PyPDF2
 python-docx
-streamlit-copy-to-clipboard 
+streamlit-copy-to-clipboard
+streamlit-cookies-manager 
