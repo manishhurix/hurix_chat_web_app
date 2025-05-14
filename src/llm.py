@@ -19,19 +19,19 @@ def chat_with_model(model, messages, files=None):
     context = "\n".join(files) if files else ""
     try:
         if provider == "OpenAI":
-            openai.api_key = os.getenv("OPENAI_API_KEY")
+            client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
             # Prepare OpenAI messages
             openai_messages = []
             if context:
                 openai_messages.append({"role": "system", "content": f"Document context: {context}"})
             openai_messages += [{"role": m["role"], "content": m["content"]} for m in messages]
-            response = openai.ChatCompletion.create(
+            response = client.chat.completions.create(
                 model=version,
                 messages=openai_messages,
                 max_tokens=1024,
                 temperature=0.7
             )
-            return response.choices[0].message["content"]
+            return response.choices[0].message.content
         elif provider == "Anthropic":
             client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
             # Prepare Anthropic messages
