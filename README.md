@@ -1,4 +1,4 @@
-# Hurix Chat LLM App
+# Hurix Chat LLM App (https://hurixchatchat.streamlit.app)
 
 A Streamlit-based chat application with ChatGPT-like UI, Google OAuth (hurix.com only), document upload, chat history, and support for multiple LLMs (ChatGPT, Claude, etc.).
 
