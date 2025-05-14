@@ -5,6 +5,7 @@ from . import auth
 import os
 from datetime import datetime
 import re
+import time
 
 def render_sidebar(user):
     logo_path = os.path.join("assets", "logo.png")
@@ -91,6 +92,7 @@ def render_chat_window(user):
     # --- ChatGPT-like input area with file upload ---
     st.markdown("---")
     file_name, file_context = chat.get_file_context_for_chat(chat_id)
+    # File upload logic
     if file_name:
         st.markdown(f"**Attached file:** {file_name}")
         if st.button("Remove attached file", key=f"remove_file_{chat_id}"):
@@ -99,13 +101,25 @@ def render_chat_window(user):
             return
     uploaded_file = st.file_uploader("Attach a document (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"], key=f"file_{chat_id}")
     if uploaded_file:
-        file_text = utils.parse_uploaded_file(uploaded_file)
-        chat.set_chat_file_context(chat_id, uploaded_file.name, file_text)
+        with st.spinner("Processing file, please wait..."):
+            file_text = utils.parse_uploaded_file(uploaded_file)
+            chat.set_chat_file_context(chat_id, uploaded_file.name, file_text)
         st.success("File uploaded and parsed. It is now attached to this chat.")
         st.rerun()
         return
+    # Polling for file readiness
+    if file_name and not file_context:
+        st.info("Processing file, please wait...")
+        time.sleep(1)
+        st.rerun()
+        return
+    if file_name and file_context:
+        st.success("File ready for queries!")
+        chat_input_enabled = True
+    else:
+        chat_input_enabled = True  # Allow queries even without file
     # Message input
-    prompt = st.chat_input("Type your message...")
+    prompt = st.chat_input("Type your message...", disabled=not chat_input_enabled)
     if prompt:
         try:
             # Add user message
