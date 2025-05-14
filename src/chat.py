@@ -1,4 +1,4 @@
-from .db import get_user, save_chat, get_chats, delete_chat as db_delete_chat, save_message, get_messages
+from .db import get_user, save_chat, get_chats, delete_chat as db_delete_chat, save_message, get_messages, update_chat_file_context, get_chat_file_context
 from datetime import datetime
 
 def start_new_chat(user_id, title="New Chat"):
@@ -21,4 +21,10 @@ def add_message(user_id, chat_id, message, role):
     return save_message(chat_id, message_data)
 
 def get_messages_for_chat(chat_id):
-    return get_messages(chat_id) 
+    return get_messages(chat_id)
+
+def set_chat_file_context(chat_id, file_name, file_context):
+    update_chat_file_context(chat_id, file_name, file_context)
+
+def get_file_context_for_chat(chat_id):
+    return get_chat_file_context(chat_id) 

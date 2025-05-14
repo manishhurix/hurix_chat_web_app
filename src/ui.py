@@ -88,12 +88,22 @@ def render_chat_window(user):
             render_markdown_with_copy(content)
             if ts_str:
                 st.caption(ts_str)
-    # File upload
-    uploaded_file = st.file_uploader("Upload Document", type=["pdf", "docx", "txt"], key=f"file_{chat_id}")
-    file_text = None
+    # --- ChatGPT-like input area with file upload ---
+    st.markdown("---")
+    file_name, file_context = chat.get_file_context_for_chat(chat_id)
+    if file_name:
+        st.markdown(f"**Attached file:** {file_name}")
+        if st.button("Remove attached file", key=f"remove_file_{chat_id}"):
+            chat.set_chat_file_context(chat_id, None, None)
+            st.rerun()
+            return
+    uploaded_file = st.file_uploader("Attach a document (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"], key=f"file_{chat_id}")
     if uploaded_file:
         file_text = utils.parse_uploaded_file(uploaded_file)
-        st.success("File uploaded and parsed.")
+        chat.set_chat_file_context(chat_id, uploaded_file.name, file_text)
+        st.success("File uploaded and parsed. It is now attached to this chat.")
+        st.rerun()
+        return
     # Message input
     prompt = st.chat_input("Type your message...")
     if prompt:
@@ -110,7 +120,9 @@ def render_chat_window(user):
                     model = {"provider": "OpenAI", "name": "ChatGPT", "version": version}
                 else:
                     model = {"provider": "Anthropic", "name": "Claude", "version": version}
-                files = [file_text] if file_text else None
+                # Always use the chat's file context if present
+                _, file_context = chat.get_file_context_for_chat(chat_id)
+                files = [file_context] if file_context else None
                 messages = chat.get_messages_for_chat(chat_id) + [{"role": "user", "content": prompt}]
                 llm_response = llm.chat_with_model(model, messages, files=files)
                 if llm_response.startswith("[LLM Error"):

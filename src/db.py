@@ -48,4 +48,13 @@ def get_messages(chat_id):
     messages = list(messages_col.find({"chat_id": chat_id}))
     for m in messages:
         m["_id"] = str(m["_id"])
-    return messages 
+    return messages
+
+def update_chat_file_context(chat_id, file_name, file_context):
+    chats_col.update_one({"_id": ObjectId(chat_id)}, {"$set": {"file_name": file_name, "file_context": file_context}})
+
+def get_chat_file_context(chat_id):
+    chat = chats_col.find_one({"_id": ObjectId(chat_id)})
+    if chat:
+        return chat.get("file_name"), chat.get("file_context")
+    return None, None 
