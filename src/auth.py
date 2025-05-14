@@ -4,7 +4,7 @@ from google_auth_oauthlib.flow import Flow
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import requests as req
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse, parse_qs
 
 def logout():
     for key in list(st.session_state.keys()):
@@ -52,8 +52,10 @@ def login():
         st.stop()
 
     # Step 2: Exchange code for token
-    code = st.query_params["code"][0]
-    
+    # Use urllib to parse the full code value
+    query = urlparse(st.experimental_get_url()).query
+    code = parse_qs(query)["code"][0]
+    st.write("Google auth token code:", code)
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
@@ -64,10 +66,9 @@ def login():
     }
     resp = req.post(token_url, data=data)
     if resp.status_code != 200:
-        # st.write("CLIENT_ID:", CLIENT_ID)
-        # st.write("CLIENT_SECRET:", CLIENT_SECRET)
-        # st.write("REDIRECT URI:", REDIRECT_URI)
-        st.write("Google auth token code:", code)
+        st.write("CLIENT_ID:", CLIENT_ID)
+        st.write("CLIENT_SECRET:", CLIENT_SECRET)
+        st.write("REDIRECT URI:", REDIRECT_URI)
         st.write("Google token endpoint response:", resp.text)
         st.error("Failed to authenticate with Google.")
         st.stop()
