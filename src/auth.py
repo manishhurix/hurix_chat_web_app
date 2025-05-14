@@ -5,10 +5,14 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 import requests as req
 from urllib.parse import urlencode
+from streamlit_cookies_manager import EncryptedCookieManager
+import json
 
 def logout():
-    for key in list(st.session_state.keys()):
-        del st.session_state[key]
+    if "user" in st.session_state:
+        del st.session_state["user"]
+    cookies["user"] = ""
+    cookies.save()
     st.experimental_rerun()
     return
 
@@ -17,13 +21,33 @@ CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "https://hurixchatchat.streamlit.app/")
 # REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8501/")
 
+cookies = EncryptedCookieManager(
+    prefix="hurix_chat",
+    password=os.environ.get("COOKIE_SECRET", "some-random-secret"),
+)
+if not cookies.ready():
+    st.stop()
 
 # st.write("REDIRECT URI:", REDIRECT_URI)
 
-def login():
+def login_success(user):
+    cookies["user"] = json.dumps(user)
+    cookies.save()
+    st.session_state["user"] = user
+
+def get_logged_in_user():
     if "user" in st.session_state:
         return st.session_state["user"]
+    if "user" in cookies and cookies["user"]:
+        user = json.loads(cookies["user"])
+        st.session_state["user"] = user
+        return user
+    return None
 
+def login():
+    user = get_logged_in_user()
+    if user:
+        return user
     # Step 1: Get authorization code
     if "code" not in st.query_params:
         # Show logo
@@ -58,7 +82,6 @@ def login():
         code = code_param[0]
     else:
         code = code_param
-    st.write("Google auth token code:", code)
     token_url = "https://oauth2.googleapis.com/token"
     data = {
         "code": code,
@@ -69,11 +92,6 @@ def login():
     }
     resp = req.post(token_url, data=data)
     if resp.status_code != 200:
-        # st.write("CLIENT_ID:", CLIENT_ID)
-        # st.write("CLIENT_SECRET:", CLIENT_SECRET)
-        # st.write("REDIRECT URI:", REDIRECT_URI)
-        # st.write("Google token endpoint response:", resp.text)
-        # st.error("Failed to authenticate with Google.")
         st.stop()
     tokens = resp.json()
     idinfo = id_token.verify_oauth2_token(tokens["id_token"], requests.Request(), CLIENT_ID)
@@ -82,5 +100,5 @@ def login():
         st.error("Only hurix.com email addresses are allowed.")
         st.stop()
     user = {"email": email, "name": idinfo.get("name", "")}
-    st.session_state["user"] = user
+    login_success(user)
     return user 

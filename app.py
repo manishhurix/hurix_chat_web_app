@@ -3,9 +3,11 @@ st.set_page_config(page_title="Hurix Chat LLM App", layout="wide")
 from src import auth, chat, db, llm, ui, utils
 
 def main():
-    user = auth.login()
+    user = auth.get_logged_in_user()
     if not user:
-        st.stop()
+        user = auth.login()
+        if not user:
+            st.stop()
     ui.render_sidebar(user)
 
     user_id = user.get("_id") or user.get("email")
