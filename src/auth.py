@@ -13,6 +13,7 @@ def logout():
         del st.session_state["user"]
     cookies["user"] = ""
     cookies.save()
+    st.query_params.clear()
     st.rerun()
     return
 
