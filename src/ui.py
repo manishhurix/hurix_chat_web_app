@@ -14,6 +14,7 @@ def render_sidebar(user):
     # Logout button
     if st.sidebar.button("Logout"):
         auth.logout()
+        return
     # Model selector
     models = get_available_models()
     model_options = [f"{m['name']} ({v})" for m in models for v in m['versions']]
