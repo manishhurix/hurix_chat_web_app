@@ -37,13 +37,13 @@ def render_sidebar(user):
     if st.sidebar.button("New Chat"):
         new_chat_id = chat.start_new_chat(user_id)
         st.session_state["selected_chat"] = new_chat_id
-        st.experimental_rerun()
+        st.rerun()
         return
     # Delete chat
     if st.sidebar.button("Delete Chat") and st.session_state.get("selected_chat"):
         chat.delete_chat(user_id, st.session_state["selected_chat"])
         st.session_state["selected_chat"] = chat_ids[0] if chat_ids else None
-        st.experimental_rerun()
+        st.rerun()
         return
 
 def render_markdown_with_copy(md_text):
@@ -121,5 +121,5 @@ def render_chat_window(user):
             st.error(f"An error occurred: {e}")
             import traceback
             st.text(traceback.format_exc())
-        st.experimental_rerun()
+        st.rerun()
         return 

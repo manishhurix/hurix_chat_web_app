@@ -43,7 +43,7 @@ def main():
         chat.add_message(user_id, chat_id, llm_response, "assistant")
         # Clear input and rerun
         st.session_state["_chat_input"] = ""
-        st.experimental_rerun()
+        st.rerun()
 
     ui.render_chat_window(user)
 

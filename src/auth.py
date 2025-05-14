@@ -13,7 +13,7 @@ def logout():
         del st.session_state["user"]
     cookies["user"] = ""
     cookies.save()
-    st.experimental_rerun()
+    st.rerun()
     return
 
 CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
