@@ -12,6 +12,7 @@ def parse_docx(file):
     return text
 
 def parse_txt(file):
+    file.seek(0)
     return file.read().decode("utf-8")
 
 def parse_uploaded_file(file):

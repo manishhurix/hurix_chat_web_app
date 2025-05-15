@@ -57,4 +57,22 @@ def get_chat_file_context(chat_id):
     chat = chats_col.find_one({"_id": ObjectId(chat_id)})
     if chat:
         return chat.get("file_name"), chat.get("file_context")
-    return None, None 
+    return None, None
+
+def add_file_to_chat(chat_id, file_name, file_context):
+    chats_col.update_one(
+        {"_id": ObjectId(chat_id)},
+        {"$push": {"files": {"file_name": file_name, "file_context": file_context}}}
+    )
+
+def remove_file_from_chat(chat_id, file_name):
+    chats_col.update_one(
+        {"_id": ObjectId(chat_id)},
+        {"$pull": {"files": {"file_name": file_name}}}
+    )
+
+def get_files_for_chat(chat_id):
+    chat = chats_col.find_one({"_id": ObjectId(chat_id)})
+    if chat and "files" in chat:
+        return chat["files"]
+    return [] 
