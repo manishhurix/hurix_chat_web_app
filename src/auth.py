@@ -51,12 +51,9 @@ def login():
     user = get_logged_in_user()
     if user:
         return user
-    # Step 1: Get authorization code
     if "code" not in st.query_params:
-        # Show logo
-        logo_path = os.path.join("assets", "logo.png")
-        st.image(logo_path, width=200)
-        # Google login button with icon
+        # Use public URL for the logo
+        logo_url = "https://www.hurix.com/wp-content/uploads/2025/01/newhurixlogo.png"
         auth_url = (
             "https://accounts.google.com/o/oauth2/v2/auth?" +
             urlencode({
@@ -68,15 +65,25 @@ def login():
                 "prompt": "select_account"
             })
         )
-        google_icon = "https://upload.wikimedia.org/wikipedia/commons/4/4a/Logo_2013_Google.png"
-        st.markdown(f'''
-            <a href="{auth_url}" style="text-decoration: none;">
-                <div style="display: flex; align-items: center; justify-content: center; border: 1px solid #ccc; border-radius: 6px; padding: 10px 20px; width: 260px; margin: 20px auto; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
-                    <img src="{google_icon}" alt="Google" style="width: 24px; height: 24px; margin-right: 12px;"/>
-                    <span style="font-size: 16px; color: #444;">Continue with Google</span>
+        st.markdown(f"""
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh;">
+                <div style="background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 40px 32px 24px 32px; min-width: 340px; max-width: 90vw; display: flex; flex-direction: column; align-items: center;">
+                    <img src='{logo_url}' width='160' style='margin-bottom: 32px;'/>
+                    <h2 style='margin-bottom: 20px; color: #222; font-weight: 600; letter-spacing: 0.5px;'>Sign in to Hurix Chat</h2>
+                    <a href="{auth_url}" style="text-decoration: none;">
+                        <div style="display: flex; align-items: center; justify-content: center; border: 1.5px solid #e0e0e0; border-radius: 8px; padding: 14px 28px; width: 280px; margin: 0; background: #fff; box-shadow: 0 2px 8px rgba(60,64,67,0.04); transition: box-shadow 0.2s; cursor: pointer; font-weight: 500; font-size: 17px; gap: 16px;">
+                            <span style="color: #444; font-size: 17px; font-weight: 500; letter-spacing: 0.1px;">Continue with Google</span>
+                        </div>
+                    </a>
+                    <style>
+                    a[href^=\"https://accounts.google.com\"] div:hover {{
+                        box-shadow: 0 4px 16px rgba(60,64,67,0.10);
+                        border-color: #bdbdbd;
+                    }}
+                    </style>
                 </div>
-            </a>
-        ''', unsafe_allow_html=True)
+            </div>
+        """, unsafe_allow_html=True)
         st.stop()
 
     # Step 2: Exchange code for token
