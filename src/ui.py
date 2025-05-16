@@ -99,7 +99,33 @@ def render_chat_window(user):
                 st.caption(ts_str)
     st.markdown("---")
     chat_input_enabled = True
+
+    # Show a message if a file is uploaded and will be used as context
+    if "uploaded_file_content" in st.session_state and "uploaded_file_name" in st.session_state:
+        st.info(f"Document '{st.session_state['uploaded_file_name']}' is attached and will be used as additional context for your queries.")
+
+    # Remove upload icon and its HTML/CSS, keep only the hidden file uploader
     prompt = st.chat_input("Type your message...", disabled=not chat_input_enabled)
+
+    # Hidden file uploader remains for programmatic use
+    uploaded_file = st.file_uploader(
+        "",
+        type=["pdf", "docx", "txt"],
+        label_visibility="collapsed",
+        key="file_uploader_hidden"
+    )
+    if uploaded_file is not None:
+        from . import utils
+        file_content = utils.parse_uploaded_file(uploaded_file)
+        file_name = uploaded_file.name
+        if file_content and not file_content.startswith("Unsupported"):
+            st.session_state["uploaded_file_content"] = file_content
+            st.session_state["uploaded_file_name"] = file_name
+            st.success(f"Uploaded: {file_name}")
+        else:
+            st.warning("Could not read file content.")
+
+    # When user sends a prompt, include file content as context if available
     if prompt:
         try:
             # Add user message
@@ -115,7 +141,11 @@ def render_chat_window(user):
                 else:
                     model = {"provider": "Anthropic", "name": "Claude", "version": version}
                 messages = chat.get_messages_for_chat(chat_id) + [{"role": "user", "content": prompt}]
-                llm_response = llm.chat_with_model(model, messages)
+                # Add file content as context if available
+                files = None
+                if "uploaded_file_content" in st.session_state:
+                    files = [st.session_state["uploaded_file_content"]]
+                llm_response = llm.chat_with_model(model, messages, files=files)
                 st.write("DEBUG: LLM response:", llm_response)  # Debug output
                 if llm_response.startswith("[LLM Error"):
                     st.error(llm_response)

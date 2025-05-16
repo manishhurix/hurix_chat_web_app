@@ -18,7 +18,7 @@ if not logger.hasHandlers():
 def get_available_models():
     # Return available LLMs and versions
     return [
-        {"provider": "OpenAI", "name": "ChatGPT", "versions": ["gpt-3.5-turbo", "gpt-4"]},
+        # {"provider": "OpenAI", "name": "ChatGPT", "versions": ["gpt-3.5-turbo", "gpt-4"]},
         {"provider": "Anthropic", "name": "Claude", "versions": ["claude-2"]},
     ]
 
@@ -72,8 +72,11 @@ def chat_with_model(model, messages, files=None):
             client = anthropic.Anthropic(api_key=api_key)
             # Only support Claude v2 (messages API)
             anthropic_messages = []
-            if context:
-                anthropic_messages.append({"role": "user", "content": f"Document context: {context}"})
+            # Prepend document context to the last user message if context exists
+            if context and messages and messages[-1]["role"] == "user":
+                messages = messages.copy()
+                messages[-1] = messages[-1].copy()
+                messages[-1]["content"] = f"[Document context: {context}]\n\n" + messages[-1]["content"]
             # Only keep 'role' and 'content' for each message
             anthropic_messages += [
                 {"role": m["role"], "content": m["content"]}
