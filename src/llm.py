@@ -22,11 +22,12 @@ def get_available_models():
         {"provider": "Anthropic", "name": "Claude", "versions": ["claude-2"]},
     ]
 
-def chat_with_model(model, messages, files=None):
+def chat_with_model(model, messages, files=None, file_names=None):
     # Call the selected LLM with message history and optional files
     # model: dict with provider, name, version
     # messages: list of dicts [{role, content}]
     # files: list of file contents (optional)
+    # file_names: list of file names (optional)
     provider = model["provider"]
     version = model["version"]
     context = "\n".join(files) if files else ""
@@ -73,10 +74,14 @@ def chat_with_model(model, messages, files=None):
             # Only support Claude v2 (messages API)
             anthropic_messages = []
             # Prepend document context to the last user message if context exists
-            if context and messages and messages[-1]["role"] == "user":
+            if files and messages and messages[-1]["role"] == "user":
+                context_str = "[Document context:\n"
+                for idx, (name, content) in enumerate(zip(file_names or [], files)):
+                    context_str += f"File {idx+1}: {name}\n---------------------\n{content}\n\n"
+                context_str += "]\n\n"
                 messages = messages.copy()
                 messages[-1] = messages[-1].copy()
-                messages[-1]["content"] = f"[Document context: {context}]\n\n" + messages[-1]["content"]
+                messages[-1]["content"] = context_str + messages[-1]["content"]
             # Only keep 'role' and 'content' for each message
             anthropic_messages += [
                 {"role": m["role"], "content": m["content"]}
