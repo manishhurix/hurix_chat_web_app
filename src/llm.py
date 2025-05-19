@@ -49,7 +49,7 @@ def chat_with_model(model, messages, files=None, file_names=None):
                 response = client.chat.completions.create(
                     model=version,
                     messages=openai_messages,
-                    max_tokens=1024,
+                    max_tokens=4096,
                     temperature=0.7
                 )
                 return response.choices[0].message.content
@@ -63,7 +63,7 @@ def chat_with_model(model, messages, files=None, file_names=None):
                 response = openai.ChatCompletion.create(
                     model=version,
                     messages=openai_messages,
-                    max_tokens=1024,
+                    max_tokens=4096,
                     temperature=0.7
                 )
                 return response["choices"][0]["message"]["content"]
@@ -89,7 +89,7 @@ def chat_with_model(model, messages, files=None, file_names=None):
             ]
             response = client.messages.create(
                 model=version,
-                max_tokens=1024,
+                max_tokens=4096,
                 messages=anthropic_messages
             )
             # Claude 2 returns a list of content blocks; join text blocks
