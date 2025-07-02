@@ -7,10 +7,15 @@ import requests as req
 from urllib.parse import urlencode
 from streamlit_cookies_manager import EncryptedCookieManager
 import json
+import hashlib
+import time
 
 def logout():
-    if "user" in st.session_state:
-        del st.session_state["user"]
+    # Clear all user-related session state
+    keys_to_clear = ["user", "selected_chat", "uploaded_files", "selected_model"]
+    for key in keys_to_clear:
+        if key in st.session_state:
+            del st.session_state[key]
     cookies["user"] = ""
     cookies.save()
     st.query_params.clear()
@@ -22,8 +27,19 @@ CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 # REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8501/")
 REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "https://hurixchatchat.streamlit.app/")
 
+# Generate a unique session key based on browser session
+def get_session_key():
+    """Generate a unique session identifier to prevent session sharing"""
+    browser_info = {
+        'user_agent': st.context.headers.get('user-agent', ''),
+        'remote_ip': st.context.headers.get('x-forwarded-for', st.context.headers.get('remote-addr', '')),
+        'timestamp': str(int(time.time() / 3600))  # Changes every hour
+    }
+    session_string = json.dumps(browser_info, sort_keys=True)
+    return hashlib.md5(session_string.encode()).hexdigest()[:16]
+
 cookies = EncryptedCookieManager(
-    prefix="hurix_chat",
+    prefix=f"hurix_chat_{get_session_key()}",  # Use unique prefix per session
     password=os.environ.get("COOKIE_SECRET", "some-random-secret"),
 )
 if not cookies.ready():
@@ -33,18 +49,51 @@ if not cookies.ready():
 # st.write("REDIRECT_URI:", REDIRECT_URI)
 # st.write("CLIENT_SECRET:", CLIENT_SECRET)
 
+def get_consistent_user_id(user):
+    """Ensure consistent user ID across sessions"""
+    # Always use email as the primary identifier for consistency
+    user_id = user.get("email")
+    if not user_id:
+        raise ValueError("User email is required for consistent identification")
+    return user_id
+
 def login_success(user):
+    # Add consistent user ID
+    user["consistent_id"] = get_consistent_user_id(user)
+    user["session_key"] = get_session_key()
+    
     cookies["user"] = json.dumps(user)
     cookies.save()
     st.session_state["user"] = user
 
 def get_logged_in_user():
+    # Check session state first
     if "user" in st.session_state:
-        return st.session_state["user"]
+        user = st.session_state["user"]
+        # Verify session integrity
+        if user.get("session_key") == get_session_key():
+            return user
+        else:
+            # Session key mismatch, clear user
+            del st.session_state["user"]
+    
+    # Check cookies
     if "user" in cookies and cookies["user"]:
-        user = json.loads(cookies["user"])
-        st.session_state["user"] = user
-        return user
+        try:
+            user = json.loads(cookies["user"])
+            # Verify session integrity
+            if user.get("session_key") == get_session_key():
+                st.session_state["user"] = user
+                return user
+            else:
+                # Session key mismatch, clear cookie
+                cookies["user"] = ""
+                cookies.save()
+        except (json.JSONDecodeError, KeyError):
+            # Invalid cookie data, clear it
+            cookies["user"] = ""
+            cookies.save()
+    
     return None
 
 def login():

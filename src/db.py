@@ -45,10 +45,32 @@ def save_message(chat_id, message_data):
     return str(msg_id)
 
 def get_messages(chat_id):
+    # First verify the chat belongs to a valid user before returning messages
+    chat = chats_col.find_one({"_id": ObjectId(chat_id)})
+    if not chat:
+        return []
+    
     messages = list(messages_col.find({"chat_id": chat_id}))
     for m in messages:
         m["_id"] = str(m["_id"])
     return messages
+
+def get_messages_for_user(chat_id, user_id):
+    """Secure version that verifies user ownership of the chat"""
+    # Verify the chat belongs to the requesting user
+    chat = chats_col.find_one({"_id": ObjectId(chat_id), "user_id": user_id})
+    if not chat:
+        return []  # User doesn't own this chat
+    
+    messages = list(messages_col.find({"chat_id": chat_id}))
+    for m in messages:
+        m["_id"] = str(m["_id"])
+    return messages
+
+def get_chat_with_user_verification(chat_id, user_id):
+    """Verify user owns the chat before allowing access"""
+    chat = chats_col.find_one({"_id": ObjectId(chat_id), "user_id": user_id})
+    return chat
 
 def update_chat_file_context(chat_id, file_name, file_context):
     chats_col.update_one({"_id": ObjectId(chat_id)}, {"$set": {"file_name": file_name, "file_context": file_context}})
