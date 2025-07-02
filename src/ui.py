@@ -33,7 +33,7 @@ def render_sidebar(user):
         on_change=reset_chat_state
     )
     # Chat history
-    user_id = user.get("_id") or user.get("email")
+    user_id = auth.get_consistent_user_id(user)
     chats = chat.get_chat_history(user_id)
     chat_titles = [c.get("title", "Untitled") for c in chats]
     chat_ids = [c["_id"] for c in chats]
@@ -50,9 +50,12 @@ def render_sidebar(user):
         return
     # Delete chat
     if st.sidebar.button("Delete Chat") and st.session_state.get("selected_chat"):
-        chat.delete_chat(user_id, st.session_state["selected_chat"])
-        st.session_state["selected_chat"] = chat_ids[0] if chat_ids else None
-        st.rerun()
+        try:
+            chat.delete_chat(user_id, st.session_state["selected_chat"])
+            st.session_state["selected_chat"] = chat_ids[0] if chat_ids else None
+            st.rerun()
+        except PermissionError:
+            st.sidebar.error("You don't have permission to delete this chat")
         return
 
 def render_markdown_with_copy(md_text):
@@ -73,13 +76,22 @@ def render_markdown_with_copy(md_text):
 
 def render_chat_window(user):
     st.header("Chat Window")
-    user_id = user.get("_id") or user.get("email")
+    user_id = auth.get_consistent_user_id(user)
     chat_id = st.session_state.get("selected_chat")
     if not chat_id:
         st.info("Start a new chat to begin.")
         return
+    
+    # Verify user has access to this chat before showing messages
+    try:
+        messages = chat.get_messages_for_chat(chat_id, user_id)
+    except Exception as e:
+        st.error("You don't have permission to access this chat.")
+        st.session_state["selected_chat"] = None
+        st.rerun()
+        return
+    
     # Show messages
-    messages = chat.get_messages_for_chat(chat_id)
     for m in messages:
         role = m.get("role", "user")
         content = m.get("content", "")
@@ -143,7 +155,7 @@ def render_chat_window(user):
     # When user sends a prompt, include file content as context if available
     if prompt:
         try:
-            # Add user message
+            # Add user message with verification
             chat.add_message(user_id, chat_id, prompt, "user")
             # Show spinner only when waiting for LLM
             with st.spinner("Waiting for assistant response..."):
@@ -155,7 +167,7 @@ def render_chat_window(user):
                     model = {"provider": "OpenAI", "name": "ChatGPT", "version": version}
                 else:
                     model = {"provider": "Anthropic", "name": "Claude", "version": version}
-                messages = chat.get_messages_for_chat(chat_id) + [{"role": "user", "content": prompt}]
+                messages = chat.get_messages_for_chat(chat_id, user_id) + [{"role": "user", "content": prompt}]
                 # Add all file contents and names as context if available
                 files = [f["content"] for f in st.session_state.get("uploaded_files", [])]
                 file_names = [f["name"] for f in st.session_state.get("uploaded_files", [])]
@@ -168,6 +180,8 @@ def render_chat_window(user):
                     st.error(llm_response)
                 else:
                     chat.add_message(user_id, chat_id, llm_response, "assistant")
+        except PermissionError as e:
+            st.error(f"Access denied: {str(e)}")
         except Exception as e:
             st.error(f"An error occurred: {e}")
             import traceback
